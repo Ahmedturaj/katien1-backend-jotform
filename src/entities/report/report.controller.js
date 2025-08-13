@@ -19,15 +19,24 @@ export const createReport = async (req, res) => {
 };
 
 
-export const getallReport = async (req, res) => {
-    try {
-        const report = await Report.find().sort({ createdAt: -1 });
-        generateResponse(res, 200, "all report fetched successfully.", report);
-    }
-    catch (error) {
-        generateResponse(res, 500, false, error.message, null);
-    }
-}
+export const getAllReport = async (req, res) => {
+  try {
+    const allReports = await Report.find().sort({ createdAt: -1 });
+    const pendingReports = allReports.filter(r => r.status === "pending");
+    const solvedReports = allReports.filter(r => r.status === "solve");
+    const rejectedReports = allReports.filter(r => r.status === "rejected");
+
+    generateResponse(res, 200, "Reports fetched successfully", {
+      allReports,
+      pendingReports,
+      solvedReports,
+      rejectedReports,
+    });
+  } catch (error) {
+    generateResponse(res, 500, false, error.message, null);
+  }
+};
+
 
 export const getSingleReport = async (req, res) => {
     try {
