@@ -130,3 +130,18 @@ export const resetPasswordService = async ({ email, newPassword }) => {
 
   return;
 };
+
+export const changePasswordService = async ({ userId, oldPassword, newPassword }) => {
+  if (!userId || !oldPassword || !newPassword) throw new Error('User id, old password and new password are required');
+
+  const user = await User.findById(userId);
+  if (!user) throw new Error('User not found');
+
+  const isMatch = await user.comparePassword(userId, oldPassword);
+  if (!isMatch) throw new Error('Invalid old password');
+
+  user.password = newPassword;
+  await user.save();
+
+  return;
+};
