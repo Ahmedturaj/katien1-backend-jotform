@@ -1,30 +1,67 @@
-import express from "express";
-import cors from "cors";
-import cookieParser from "cookie-parser";
-import globalErrorHandler from "./middleware/globalErrorHandler.js";
-import notFound from "./middleware/notFound.js";
-import router from "./router/index.js";
+// import csurf from 'csurf';
+// app.use(csurf({ cookie: true }));
+
+import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import xssClean from 'xss-clean';
+import mongoSanitize from 'express-mongo-sanitize';
+import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
+import path from "path";
+import { fileURLToPath } from "url";
+
+
+import logger from './core/config/logger.js';
+import errorHandler from './core/middlewares/errorMiddleware.js';
+import notFound from './core/middlewares/notFound.js';
+import { globalLimiter } from './lib/limit.js';
+import appRouter from './core/app/appRouter.js';
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
-app.use(express.json());
+// Set up security middleware
+app.use(helmet());
+app.use(
+    cors({
+      origin: true,
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    })
+  );
+app.use(xssClean());
+app.use(mongoSanitize());
+
+// Set up logging middleware
+app.use(morgan('combined'));
+
+// Set up body parsing middleware
+app.use(express.json({ limit: '10000kb' }));
 app.use(express.urlencoded({ extended: true }));
-
-const corsOptions = {
-  origin: "*",
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
 app.use(cookieParser());
 
-app.use("/api/v1", router);
+// Set up rate limiting middleware
+app.use(globalLimiter);
 
-app.use("/", (req, res) => {
-  res.send("Your server is running!");
-});
+// Set up static files middleware
+const uploadPath = path.resolve(__dirname, "../uploads");
+app.use("/uploads", express.static(uploadPath));
 
-app.use(globalErrorHandler);
+// Set up API routes
+app.use('/api', appRouter);
+
+// Set up 404 error middleware
 app.use(notFound);
 
+// Set up error handling middleware
+app.use(errorHandler);
+
+logger.info('Middleware stack initialized');
+
 export default app;
+
+
