@@ -1,41 +1,68 @@
 import RoleType from '../../lib/types.js';
 import mongoose from 'mongoose';
-import jwt from "jsonwebtoken";
+import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import { accessTokenExpires, accessTokenSecrete, refreshTokenExpires, refreshTokenSecrete } from '../../core/config/config.js';
+import {
+  accessTokenExpires,
+  accessTokenSecrete,
+  refreshTokenExpires,
+  refreshTokenSecrete
+} from '../../core/config/config.js';
 
 const UserSchema = new mongoose.Schema(
   {
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    phoneNumber: { type: String, default: null },
+    name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    about: { type: String, default: null },
     password: { type: String, required: true },
+    username: { type: String },
+    dob: { type: Date, default: null },
+    gender: {
+      type: String,
+      enum: ['male', 'female', 'other'],
+      default: 'male'
+    },
+
     role: {
       type: String,
       default: RoleType.USER,
-      enum: [RoleType.USER, RoleType.ADMIN, RoleType.SUPER_ADMIN]
+      enum: [RoleType.USER, RoleType.ADMIN]
     },
-    otp: { type: String, default: null },
-    otpExpires: { type: Date, default: null },
+
+    profileImage: { type: String, default: '' },
+    multiProfileImage: { type: [String], default: [] },
+    pdfFile: { type: String, default: '' },
+
+    otp: {
+      type: String,
+      default: null
+    },
+
+    otpExpires: {
+      type: Date,
+      default: null
+    },
+
+    isVerified: {
+      type: Boolean,
+      default: false
+    },
+
     refreshToken: {
       type: String,
       default: ''
     },
+
     hasActiveSubscription: { type: Boolean, default: false },
     subscriptionExpireDate: { type: Date, default: null },
-    profileImage: { type: String, default: '' },
-    multiProfileImage: { type: [String], default: [] },
-    pdfFile: { type: String, default: '' }
+    blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    language: { type: String, default: 'en' }
   },
   { timestamps: true }
 );
 
 // Hashing password
-UserSchema.pre("save", async function (next) {
-
-  if (!this.isModified("password")) return next();
+UserSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
 
   const hashedPassword = await bcrypt.hash(this.password, 10);
 
@@ -45,21 +72,26 @@ UserSchema.pre("save", async function (next) {
 
 // Password comparison method (bcrypt)
 UserSchema.methods.comparePassword = async function (id, plainPassword) {
-  const { password: hashedPassword } = await User.findById(id).select('password')
+  const { password: hashedPassword } =
+    await User.findById(id).select('password');
 
-  const isMatched = await bcrypt.compare(plainPassword, hashedPassword)
+  const isMatched = await bcrypt.compare(plainPassword, hashedPassword);
 
-  return isMatched
-}
+  return isMatched;
+};
 
 // Generate ACCESS_TOKEN
 UserSchema.methods.generateAccessToken = function (payload) {
-  return jwt.sign(payload, accessTokenSecrete, { expiresIn: accessTokenExpires });
+  return jwt.sign(payload, accessTokenSecrete, {
+    expiresIn: accessTokenExpires
+  });
 };
 
 // Generate REFRESH_TOKEN
 UserSchema.methods.generateRefreshToken = function (payload) {
-  return jwt.sign(payload, refreshTokenSecrete, { expiresIn: refreshTokenExpires });
+  return jwt.sign(payload, refreshTokenSecrete, {
+    expiresIn: refreshTokenExpires
+  });
 };
 
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
