@@ -1,30 +1,21 @@
-import mongoose, { Schema } from "mongoose";
-import validator from "validator"
+import mongoose, { Schema } from 'mongoose';
 const formSchema = new Schema(
   {
     type: {
       type: Number,
       enum: [1, 2, 3, 4],
-      required: true,
+      required: true
     },
-    name: {
-      firstName: { type: String, required: true, trim: true },
-      lastName: { type: String, required: true, trim: true },
-    },
-    email: {
+    formName: {
       type: String,
-      required: [true, "this field is required"],
-      validate: [validator.isEmail, "Invalid email"],
+      required: [true, 'this field is required'],
+      trim: true
     },
-    phone: { type: Number, required: true },
-    message: { type: String },
-    userId: { type: Schema.Types.ObjectId, ref: "User" },
-
-    pdfPath: { type: String },         
-    pdfFile: { type: Buffer },        
+    fieldName: [String],
+    userId: { type: Schema.Types.ObjectId, ref: 'User' }
   },
   { timestamps: true }
 );
 
-const Form = mongoose.model("Form", formSchema);
+const Form = mongoose.model('Form', formSchema);
 export default Form;

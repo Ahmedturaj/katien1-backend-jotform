@@ -2,7 +2,7 @@ import { generateResponse } from "../../lib/responseFormate.js";
 import { 
   getAllUsers,
   getAllAdmins,
-  getAllSuperAdmins,
+  getAllSellers,
   getUserById,
   updateUser,
   deleteUser,
@@ -16,10 +16,10 @@ import {
   
   createUserPDF,
   updateUserPDF,
-  deleteUserPDF,
-  
-  
+  deleteUserPDF
+
 } from "./user.service.js";
+
 
 export const getAllUsersController = async (req, res) => {
   try {
@@ -31,6 +31,7 @@ export const getAllUsersController = async (req, res) => {
   }
 };
 
+
 export const getAllAdminsController = async (req, res) => {
   try {
     const { page, limit, search, date } = req.query;
@@ -41,15 +42,17 @@ export const getAllAdminsController = async (req, res) => {
   }
 };
 
-export const getAllSuperAdminsController = async (req, res) => {
+
+export const getAllSelleresController = async (req, res) => {
   try {
     const { page, limit, search, date } = req.query;
-    const { superAdmins, paginationInfo } = await getAllSuperAdmins({ page, limit, search, date });
-    generateResponse(res, 200, true, 'Super Admins fetched successfully', { superAdmins, paginationInfo });
+    const { sellers, paginationInfo } = await getAllSellers({ page, limit, search, date });
+    generateResponse(res, 200, true, 'Seller fetched successfully', { sellers, paginationInfo });
   } catch (error) {
-    generateResponse(res, 500, false, 'Failed to fetch super admins', null);
+    generateResponse(res, 500, false, 'Failed to fetch seller', null);
   }
 };
+
 
 export const getUserByIdController = async (req, res) => {
   try {
@@ -61,6 +64,7 @@ export const getUserByIdController = async (req, res) => {
   }
 };
 
+
 export const updateUserController = async (req, res) => {
   try {
     const { id } = req.params;
@@ -70,6 +74,7 @@ export const updateUserController = async (req, res) => {
     generateResponse(res, 500, false, 'Failed to update user', null);
   }
 };
+
 
 export const deleteUserController = async (req, res) => {
   try {
@@ -82,29 +87,37 @@ export const deleteUserController = async (req, res) => {
 };
 
 
-
-
 export const createAvatarController = async (req, res) => {
   try {
     const { id } = req.params;
+    
+    if (!req.files?.profileImage) {
+      return generateResponse(res, 400, false, 'Profile image is required');
+    }
+    // console.log(id)
+
     const user = await createAvatarProfile(id, req.files);
     generateResponse(res, 200, true, 'Avatar uploaded successfully', user);
   } catch (error) {
-    generateResponse(res, 500, false, 'Failed to upload avatar', null);
+    console.error(error);
+    const status = error.message.includes('not found') ? 404 : 500;
+    const message = status === 500 ? 'Failed to upload avatar' : error.message;
+    generateResponse(res, status, false, message);
   }
 };
-
 
 
 export const updateAvatarProfileController = async (req, res) => {
   try {
     const { id } = req.params;
     const user = await updateAvatarProfile(id, req.files);
-    generateResponse(res, 200, true, 'Avatar uploaded successfully', user);
+    generateResponse(res, 200, true, 'Avatar updated successfully', user); 
   } catch (error) {
-    generateResponse(res, 500, false, 'Failed to upload avatar', error.message);
+    console.error(error);
+    generateResponse(res, 500, false, 'Failed to update avatar', error.message);
   }
 };
+
 
 export const deleteAvatarController = async (req, res) => {
   try {
@@ -112,10 +125,10 @@ export const deleteAvatarController = async (req, res) => {
     const updatedUser = await deleteAvatarProfile(id);
     generateResponse(res, 200, true, 'Avatar deleted successfully', updatedUser);
   } catch (error) {
-    generateResponse(res, 500, false, 'Failed to delete avatar', null);
+    console.error(error);
+    generateResponse(res, 500, false, 'Failed to delete avatar', error.message);
   }
 };
-
 
 
 export const createMultipleAvatarController = async (req, res) => {
@@ -128,6 +141,7 @@ export const createMultipleAvatarController = async (req, res) => {
   }
 };
 
+
 export const updateMultipleAvatarController = async (req, res) => {
   try {
     const { id } = req.params;
@@ -137,6 +151,7 @@ export const updateMultipleAvatarController = async (req, res) => {
     generateResponse(res, 500, false, 'Failed to upload multiple avatars', null);
   }
 };
+
 
 export const deleteMultipleAvatarController = async (req, res) => {
   try {
@@ -148,6 +163,7 @@ export const deleteMultipleAvatarController = async (req, res) => {
   }
 };
 
+
 export const createUserPDFController = async (req, res) => {
   try {
     const { id } = req.params;
@@ -157,6 +173,7 @@ export const createUserPDFController = async (req, res) => {
     generateResponse(res, 500, false, 'Failed to upload PDF', null);
   }
 };
+
 
 export const updateUserPDFController = async (req, res) => {
   try {
@@ -168,6 +185,7 @@ export const updateUserPDFController = async (req, res) => {
   }
 };
 
+
 export const deleteUserPDFController = async (req, res) => {
   try {
     const { id } = req.params;
@@ -177,3 +195,6 @@ export const deleteUserPDFController = async (req, res) => {
     generateResponse(res, 500, false, 'Failed to delete PDF', null);
   }
 };
+
+
+

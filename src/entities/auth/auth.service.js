@@ -6,8 +6,7 @@ import verificationCodeTemplate from '../../lib/emailTemplates.js';
 
 
 export const registerUserService = async ({
-  firstName,
-  lastName,
+  name,
   email,
   password
 }) => {
@@ -15,17 +14,17 @@ export const registerUserService = async ({
   if (existingUser) throw new Error('User already registered.');
 
   const newUser = new User({
-    firstName,
-    lastName,
+    name,
     email,
-    password
+    password,
   });
 
   const user = await newUser.save();
 
   const { _id, role, profileImage } = user;
-  return { _id, firstName, lastName, email, role, profileImage };
+  return { _id, name, email, role,  profileImage };
 };
+
 
 export const loginUserService = async ({ email, password }) => {
   if (!email || !password) throw new Error('Email and password are required');
@@ -50,6 +49,7 @@ export const loginUserService = async ({ email, password }) => {
   return data
 };
 
+
 export const refreshAccessTokenService = async (refreshToken) => {
   if (!refreshToken) throw new Error('No refresh token provided');
 
@@ -61,7 +61,7 @@ export const refreshAccessTokenService = async (refreshToken) => {
 
   if (!decoded || decoded._id !== user._id.toString()) throw new Error('Invalid refresh token')
 
-  const payload = { _id: user._id }
+  const payload = { _id: user._id , role: user.role }
 
   const accessToken = user.generateAccessToken(payload);
   const newRefreshToken = user.generateRefreshToken(payload);
@@ -74,6 +74,7 @@ export const refreshAccessTokenService = async (refreshToken) => {
     refreshToken: newRefreshToken
   }
 };
+
 
 export const forgetPasswordService = async (email) => {
 
@@ -98,6 +99,7 @@ export const forgetPasswordService = async (email) => {
   return;
 };
 
+
 export const verifyCodeService = async ({ email, otp }) => {
 
   if (!email || !otp) throw new Error('Email and otp are required')
@@ -108,7 +110,7 @@ export const verifyCodeService = async ({ email, otp }) => {
 
   if (!user.otp || !user.otpExpires) throw new Error('Otp not found');
 
-  if (Number(user.otp) !== Number(otp) || new Date() > user.otpExpires) throw new Error('Invalid or expired otp')
+  if (parseInt(user.otp, 10) !== parseInt(otp, 10) || Date.now() > user.otpExpires.getTime()) throw new Error('Invalid or expired otp')
 
   user.otp = null;
   user.otpExpires = null;
@@ -116,6 +118,7 @@ export const verifyCodeService = async ({ email, otp }) => {
 
   return;
 };
+
 
 export const resetPasswordService = async ({ email, newPassword }) => {
   if (!email || !newPassword) throw new Error('Email and new password are required');
@@ -130,6 +133,7 @@ export const resetPasswordService = async ({ email, newPassword }) => {
 
   return;
 };
+
 
 export const changePasswordService = async ({ userId, oldPassword, newPassword }) => {
   if (!userId || !oldPassword || !newPassword) throw new Error('User id, old password and new password are required');

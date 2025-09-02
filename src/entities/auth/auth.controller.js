@@ -1,20 +1,21 @@
 import { generateResponse } from '../../lib/responseFormate.js';
 import User from './auth.model.js';
 import {
-  registerUserService,
   loginUserService,
   refreshAccessTokenService,
   forgetPasswordService,
   verifyCodeService,
   resetPasswordService,
-  changePasswordService
+  changePasswordService,
+  registerUserService
 } from './auth.service.js';
 
+
 export const registerUser = async (req, res, next) => {
-  const { firstName, lastName, email, password } = req.body;
+  const { name, email, password } = req.body;
   try {
 
-    const data = await registerUserService({ firstName, lastName, email, password });
+    const data = await registerUserService({ name, email, password });
     generateResponse(res, 201, true, 'Registered user successfully!', data);
   }
 
@@ -29,6 +30,7 @@ export const registerUser = async (req, res, next) => {
     }
   }
 };
+
 
 export const loginUser = async (req, res, next) => {
   const { email, password } = req.body;
@@ -57,18 +59,6 @@ export const loginUser = async (req, res, next) => {
   }
 };
 
-export const logoutUser = async (req, res, next) => {
-
-  const userId = req.user._id;
-  try {
-    await User.findByIdAndUpdate(userId, { refreshToken: null });
-    generateResponse(res, 200, true, 'Logged out successfully', null);
-  }
-  
-  catch (error) {
-    next(error);
-  }
-};
 
 export const refreshAccessToken = async (req, res, next) => {
   const { refreshToken } = req.body;
@@ -92,6 +82,7 @@ export const refreshAccessToken = async (req, res, next) => {
     }
   }
 };
+
 
 export const forgetPassword = async (req, res, next) => {
 
@@ -148,6 +139,7 @@ export const verifyCode = async (req, res, next) => {
   }
 };
 
+
 export const resetPassword = async (req, res, next) => {
   const { email, newPassword } = req.body;
   try {
@@ -174,6 +166,7 @@ export const resetPassword = async (req, res, next) => {
   }
 };
 
+
 export const changePassword = async (req, res, next) => {
   const { oldPassword, newPassword } = req.body;
   const userId = req.user._id;
@@ -197,3 +190,16 @@ export const changePassword = async (req, res, next) => {
   }
 };
 
+
+export const logoutUser = async (req, res, next) => {
+
+  const userId = req.user._id;
+  try {
+    await User.findByIdAndUpdate(userId, { refreshToken: null });
+    generateResponse(res, 200, true, 'Logged out successfully', null);
+  }
+
+  catch (error) {
+    next(error);
+  }
+};
