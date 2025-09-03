@@ -13,14 +13,14 @@ const router = express.Router();
 
 
 // Admin dashboard
-router.get("/all-users", verifyToken, adminMiddleware , getAllUsersController);
+router.get("/all-users", verifyToken,  getAllUsersController);
 router.get("/all-admins", verifyToken, adminMiddleware,  getAllAdminsController);
 router.get("/all-sellers", verifyToken, adminMiddleware, getAllSelleresController);
 
 // user
 router.get("/:id", verifyToken, getUserByIdController);
 router.put("/:id", verifyToken, updateUserController);
-router.delete("/:id", verifyToken, adminMiddleware,  deleteUserController);
+router.delete("/:id", verifyToken,  deleteUserController);
 
 // avatar
 router.post("/upload-avatar/:id", verifyToken, multerUpload([{ name: "profileImage", maxCount: 1 }]), createAvatarController);
